@@ -3,12 +3,13 @@
 
 class DBConnection
 {
-    private $host       = 'mysql:host=localhost;dbname=blog-site'; //or localhost
+    private $host       = 'mysql:host=localhost;dbname=e-wallet'; //or localhost
     private $port       = 8081;
     private $user       = 'root';
     private $password   = '';
     private  $conn;
     private $stmt;
+    public $sql;
 
     function __construct()
     {
@@ -20,9 +21,25 @@ class DBConnection
             echo 'Failed To Connected' . $e;
         }
     }
-    function query(string $sql): void
+    function query(string $sql)
     {
-        $this->stmt = $this->conn->prepare($sql);
+        $this->sql = $sql;
+        return $this;
+    }
+    function orderBY($sql)
+    {
+        $this->sql = $this->sql . "  "  . $sql;
+        return $this;
+    }
+    function groupBy($sql)
+    {
+        $this->sql = $this->sql . "  "  . $sql;
+        return $this;
+    }
+    function done()
+    {
+        echo $this->sql;
+        return $this->stmt = $this->conn->prepare($this->sql);
     }
     function bind(string $param, string $value, int $type)
     {
@@ -62,3 +79,18 @@ class DBConnection
         }
     }
 }
+$order = 2;
+
+$DB = new DBConnection();
+$DB2 = new DBConnection();
+$DB->query("SELECT * FROM products ")->groupBy("GROUP BY :group")->done();
+$DB2->query("SELECT * FROM products ")->orderBY("ORDER BY :order ASC")->done();
+$DB2->bind(":order", "product_price", PDO::PARAM_STR);
+$DB->bind(":group", "category_id", PDO::PARAM_STR);
+$DB->execute();
+$DB2->execute();
+$arr = $DB->fetchAll();
+$arr2 = $DB2->fetchAll();
+
+print_r($arr);
+print_r($arr2);
